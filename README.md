@@ -19,5 +19,7 @@ In order to test the interactive case:
 
 To activate the pam_exec usage, add the following lines to /etc/pam.d/sshd:
 
-`# Support for AWS temporary credentials`
-`auth	   optional     pam_exec.so debug expose_authtok log=/tmp/pam_exec.log /home/labs/testing/eldara/samlaws/pam_helper.sh`
+```
+# Support for AWS temporary credentials
+auth	   optional     pam_exec.so debug expose_authtok log=/tmp/pam_exec.log /home/labs/testing/eldara/samlaws/pam_helper.sh
+```
