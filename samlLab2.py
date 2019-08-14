@@ -63,12 +63,15 @@ password = ''
 # Handle the pam_exec process. The username should be taken from the PAM_USER env variable
 # and the password should be read from stdin
 if 'PAM_USER' in os.environ.keys():
-	username = os.environ['PAM_USER']
-if username != '':
-	password = sys.stdin.read()
-	if password != '':
-		in_pam_exec = True
-        #print("DEBUG: pam_exec style. User: {}, password: {}".format(username, password))
+    username = os.environ['PAM_USER']
+    if username != '':
+        password = sys.stdin.read()
+        if password != '':
+            in_pam_exec = True
+            #print("DEBUG: pam_exec style. User: {}, password: {}".format(username, password))
+        else:
+            print("DEBUG: pam_exec mode: Couldn't get any password from stdin")
+            sys.exit(1)
 
 # During normal execution, if the token is invalidated, this script must be call from any
 # wrapper. In such case, the username is retrieved from the standard enniornment and the password
@@ -182,8 +185,12 @@ token  = stsclient.assume_role_with_saml(RoleArn=role_arn, PrincipalArn=principa
 print(token['Credentials']['SecretAccessKey'])
 
 # Write the AWS STS token into the AWS credential file
-home = expanduser("~")
+home = expanduser("~" + username)
 filename = home + awsconfigfile
+
+# Make sure the directory exists
+hn, tn = os.path.split(filename)
+os.makedirs(hn, exist_ok=True)
 
 # Read in the existing config file
 config = configparser.RawConfigParser()
