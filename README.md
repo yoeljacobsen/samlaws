@@ -7,10 +7,10 @@
 If using a virtual environment remmebr to `source <envdir>/bin/activate` first.
 
 In order to test the pam_exec case:
-`export PAM_USER=<user>`
-`echo -n <password> | ./samlLab2.py`
+* `export PAM_USER=<user>`
+* `echo -n <password> | ./samlLab2.py`
 
 In order to test the interactive case:
-`unset PAM_EXEC`
-`samlLab2.py`
+* `unset PAM_EXEC`
+* `samlLab2.py`
 
