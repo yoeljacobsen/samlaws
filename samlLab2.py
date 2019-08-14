@@ -32,9 +32,11 @@ region = 'ap-northeast-1'
 # saml profile (affects subsequent CLI calls)
 outputformat = 'json'
 
-# awsconfigfile: The file where this script will store the temp
+# awscredfile: The file where this script will store the temp
+# awsconffile: The file where this script will store the default config
 # credentials under the saml profile
-awsconfigfile = '/.aws/credentials'
+awscredfile = '/.aws/credentials'
+awsconffile = '/.aws/config'
 
 # SSL certificate verification: Whether or not strict certificate
 # verification is done, False should only be used for dev/test
@@ -186,47 +188,57 @@ print(token['Credentials']['SecretAccessKey'])
 
 # Write the AWS STS token into the AWS credential file
 home = expanduser("~" + username)
-filename = home + awsconfigfile
+credfilename = home + awscredfile
+conffilename = home + awsconffile
 
 # Make sure the directory exists
-hn, tn = os.path.split(filename)
+hn, tn = os.path.split(credfilename)
 os.makedirs(hn, exist_ok=True)
 
 # Read in the existing config file
-config = configparser.RawConfigParser()
-config.read(filename)
+cred = configparser.RawConfigParser()
+cred.read(credfilename)
+conf = configparser.RawConfigParser()
+conf.read(conffilename)
 
 # Put the credentials into a saml specific section instead of clobbering
 # the default credentials
-if not config.has_section('saml'):
-    config.add_section('saml')
+if not cred.has_section('saml'):
+    cred.add_section('saml')
+if not conf.has_section('saml'):
+    conf.add_section('saml')
 
-config.set('saml', 'output', outputformat)
-config.set('saml', 'region', region)
-config.set('saml', 'aws_access_key_id', token['Credentials']['AccessKeyId'])
-config.set('saml', 'aws_secret_access_key', token['Credentials']['SecretAccessKey'])
-config.set('saml', 'aws_session_token', token['Credentials']['SessionToken'])
+# Config file
+conf.set('saml', 'output', outputformat)
+conf.set('saml', 'region', region)
 
-# Write the updated config file
-with open(filename, 'w+') as configfile:
-    config.write(configfile)
+# Credentials
+cred.set('saml', 'aws_access_key_id', token['Credentials']['AccessKeyId'])
+cred.set('saml', 'aws_secret_access_key', token['Credentials']['SecretAccessKey'])
+cred.set('saml', 'aws_session_token', token['Credentials']['SessionToken'])
+
+# Write the updated config and credentials file
+with open(credfilename, 'w+') as credfile:
+    cred.write(credfile)
+with open(conffilename, 'w+') as conffile:
+    conf.write(conffile)
 
 # Give the user some basic info as to what has just happened
 print('\n\n----------------------------------------------------------------')
-print('Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(filename))
+print('Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(credfilename))
 print('Note that it will expire at {0}.'.format(token['Credentials']['Expiration']))
 print('After this time, you may safely rerun this script to refresh your access key pair.')
 print('To use this credential, call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).')
 print('----------------------------------------------------------------\n\n')
 
-session = boto3.Session(profile_name='saml')
+#session = boto3.Session(profile_name='saml')
 # Any clients created from this session will use credentials
 # from the [dev] section of ~/.aws/credentials.
-s3_client = session.client('s3')
+#s3_client = session.client('s3')
 
-response = s3_client.list_buckets()
-buckets = [bucket['Name'] for bucket in response['Buckets']]
-
-print('Simple API example listing all S3 buckets:')
-print("\n".join(buckets))
+#response = s3_client.list_buckets()
+#buckets = [bucket['Name'] for bucket in response['Buckets']]
+#
+#print('Simple API example listing all S3 buckets:')
+#print("\n".join(buckets))
 
