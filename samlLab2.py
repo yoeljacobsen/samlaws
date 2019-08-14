@@ -54,21 +54,29 @@ sslverification = False
 session = requests.Session()
 print("Posting  Req")
 
+# Am I running as part of a pam_exec process?
 in_pam_exec = False
+
 username = ''
 password = ''
+
+# Handle the pam_exec process. The username should be taken from the PAM_USER env variable
+# and the password should be read from stdin
 if 'PAM_USER' in os.environ.keys():
 	username = os.environ['PAM_USER']
 if username != '':
 	password = sys.stdin.read()
 	if password != '':
 		in_pam_exec = True
-		print("DEBUG: pam_exec style. User: {}, password: {}".format(username, password))
+        #print("DEBUG: pam_exec style. User: {}, password: {}".format(username, password))
 
+# During normal execution, if the token is invalidated, this script must be call from any
+# wrapper. In such case, the username is retrieved from the standard enniornment and the password
+# is requested from the user
 if not in_pam_exec:
 	username = getpass.getuser()
 	password = getpass.getpass('Your token has expired. Please retype your password: ')
-	print("DEBUG: NOT in pam_exec. User: {}, password: {}".format(username, password))
+	#print("DEBUG: NOT in pam_exec. User: {}, password: {}".format(username, password))
 
 #payload = {
 #    'option':'credential',
@@ -82,7 +90,7 @@ payload = {
     'Ecom_Password': password
 }
 
-print(payload)
+#print(payload)
 
 idpauthformsubmiturl="https://e-idp-auth-lab.weizmann.ac.il/nidp/app/login?sid=0&sid=0"
 #print(payload)
